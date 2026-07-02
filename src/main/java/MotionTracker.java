@@ -9,10 +9,10 @@ import static org.bytedeco.opencv.global.opencv_imgproc.*;
 
 public class MotionTracker {
 
-    private  static  final  int HISTORY_SIZE = 15;
-    private  static  final  int MIN_DIRECTION_CHANGES = 4;
-    private  static  final  double MIN_MOVEMENT = 15;
-    private  static  final  double MIN_AREA = 2000;
+    private  static  final  int HISTORY_SIZE = 30;
+    private  static  final  int MIN_DIRECTION_CHANGES = 15;
+    private  static  final  double MIN_MOVEMENT = 20;
+    private  static  final  double MIN_AREA = 2300;
     private final List<Integer> yHistory = new ArrayList<>();
 
     public Rect detectMotion(Mat prevGray, Mat gray) {
