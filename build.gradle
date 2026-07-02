@@ -8,9 +8,13 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.bytedeco:javacv-platform:1.5.10'
+    implementation 'org.bytedeco:javacv:1.5.10'
+    implementation 'org.bytedeco:opencv:4.9.0-1.5.10:windows-x86_64'
+    implementation 'org.bytedeco:openblas:0.3.26-1.5.10:windows-x86_64'
+    implementation 'org.bytedeco:ffmpeg:6.1.1-1.5.10:windows-x86_64'
 }
 
 application {
     mainClass = 'Main'
+    applicationDefaultJvmArgs = ['--enable-native-access=ALL-UNNAMED']
 }
