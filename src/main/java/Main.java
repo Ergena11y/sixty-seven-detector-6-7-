@@ -1,62 +1,95 @@
 import org.bytedeco.javacv.*;
-import org.bytedeco.javacv.Frame;import org.bytedeco.opencv.opencv_core.*;
+import org.bytedeco.opencv.opencv_core.*;
 
-import javax.swing.*;import java.awt.*;import static org.bytedeco.opencv.global.opencv_core.*;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.Timer;
+import java.io.BufferedInputStream;
+import java.io.InputStream;
+import java.net.URL;
+
+
 import static org.bytedeco.opencv.global.opencv_imgproc.*;
+
 
 public class Main {
 
-  public static void main(String[] args) throws Exception{
+    public static void main(String[] args) throws Exception {
+        FrameGrabber grabber = FrameGrabber.createDefault(0);
+        grabber.start();
 
-   FrameGrabber grabber  = FrameGrabber.createDefault(0);
-   grabber.start();
+        OpenCVFrameConverter.ToMat converter = new OpenCVFrameConverter.ToMat();
+        CanvasFrame canvas = new CanvasFrame("hand-shake-67");
+        canvas.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
 
-   OpenCVFrameConverter.ToMat converter = new OpenCVFrameConverter.ToMat();
-   CanvasFrame canvas = new CanvasFrame("hand-shake-67");
+        MotionTracker tracker = new MotionTracker();
+        Mat prevGray = null;
 
-   canvas.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        while (canvas.isVisible()) {
+            Frame frame = grabber.grab();
+            if (frame == null) continue;
 
-   MotionTracker tracker = new MotionTracker();
+            Mat mat = converter.convert(frame);
 
-   Mat prevGray = null;
+            Mat gray = new Mat();
+            cvtColor(mat, gray, COLOR_BGR2GRAY);
+            GaussianBlur(gray, gray, new Size(21, 21), 0);
 
-   while (canvas.isVisible()) {
-       Frame frame = grabber.grab();
+            if (prevGray == null) {
+                prevGray = gray;
+                continue;
+            }
 
-       if (frame == null) continue;
+            Rect motionRect = tracker.detectMotion(prevGray, gray);
+            if (motionRect != null) {
+                rectangle(mat, motionRect, new Scalar(0, 255, 0, 0));
 
-       Mat mat = converter.convert(frame);
-       Mat gray = new Mat();
-       cvtColor(mat, gray, COLOR_BGR2GRAY);
-       GaussianBlur(gray, gray, new Size(21, 21), 0);
+                if (tracker.isShaking()) {
+                    triggerMeme67();
+                    tracker.reset();
+                }
+            }
 
-       if (prevGray == null) {
-           prevGray = gray;
-           continue;
-       }
+            prevGray = gray;
+            canvas.showImage(converter.convert(mat));
+        }
 
-       Rect motionRect = tracker.detectMotion(prevGray, gray);
+        grabber.stop();
+        canvas.dispose();
+    }
 
-       if ( motionRect != null ) {
-           rectangle(mat, motionRect, new Scalar(0, 255, 0, 0));
+    private static void triggerMeme67() {
+        playSound();
+        showMemeGif();
+    }
 
-           if (tracker.isShaking()) {
-               triggerMeme67();
-               tracker.reset();
-           }
-       }
+    private static void playSound() {
+        try (InputStream audioSrc = Main.class.getResourceAsStream("/meme67.wav");
+             AudioInputStream audioStream = AudioSystem.getAudioInputStream(new BufferedInputStream(audioSrc))) {
 
-       prevGray = gray;
-       canvas.showImage(converter.convert(mat));
-   }
+            Clip clip = AudioSystem.getClip();
+            clip.open(audioStream);
+            clip.start();
 
-   grabber.stop();
-   canvas.dispose();
-  }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-  private static void triggerMeme67() {
-      System.out.println("67 ПОЙМАЛИ ДВИЖ!");
+    private static void showMemeGif() {
+        URL gifUrl = Main.class.getResource("/meme67.gif");
+        ImageIcon gifIcon = new ImageIcon(gifUrl);
 
+        JFrame memeFrame = new JFrame("67!");
+        memeFrame.getContentPane().add(new JLabel(gifIcon));
+        memeFrame.pack();
+        memeFrame.setLocationRelativeTo(null);
+        memeFrame.setVisible(true);
 
-  }
+        new Timer(3000, e -> memeFrame.dispose()).start();
+    }
 }
