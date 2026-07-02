@@ -8,11 +8,11 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.Timer;
-import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URL;
 
-
+import static org.bytedeco.opencv.global.opencv_core.*;
 import static org.bytedeco.opencv.global.opencv_imgproc.*;
 
 
@@ -49,8 +49,8 @@ public class Main {
                 rectangle(mat, motionRect, new Scalar(0, 255, 0, 0));
 
                 if (tracker.isShaking()) {
-                    triggerMeme67();
                     tracker.reset();
+                    new Thread(Main::triggerMeme67).start();
                 }
             }
 
@@ -68,12 +68,18 @@ public class Main {
     }
 
     private static void playSound() {
-        try (InputStream audioSrc = Main.class.getResourceAsStream("/meme67.wav");
-             AudioInputStream audioStream = AudioSystem.getAudioInputStream(new BufferedInputStream(audioSrc))) {
+        try (InputStream audioSrc = Main.class.getResourceAsStream("/meme67.wav")) {
+            if (audioSrc == null) {
+                System.err.println("meme67.wav не найден в resources — проверь путь и пересинкай Gradle");
+                return;
+            }
 
-            Clip clip = AudioSystem.getClip();
-            clip.open(audioStream);
-            clip.start();
+            byte[] audioBytes = audioSrc.readAllBytes();
+            try (AudioInputStream audioStream = AudioSystem.getAudioInputStream(new ByteArrayInputStream(audioBytes))) {
+                Clip clip = AudioSystem.getClip();
+                clip.open(audioStream);
+                clip.start();
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -82,6 +88,11 @@ public class Main {
 
     private static void showMemeGif() {
         URL gifUrl = Main.class.getResource("/meme67.gif");
+        if (gifUrl == null) {
+            System.err.println("meme67.gif не найден в resources — проверь путь и пересинкай Gradle");
+            return;
+        }
+
         ImageIcon gifIcon = new ImageIcon(gifUrl);
 
         JFrame memeFrame = new JFrame("67!");
